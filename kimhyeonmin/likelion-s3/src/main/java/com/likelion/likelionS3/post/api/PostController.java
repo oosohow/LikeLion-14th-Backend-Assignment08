@@ -59,7 +59,7 @@ public class PostController {
     // 이미지 삭제 API
     @DeleteMapping("/{postId}/image")
     @Operation(summary = "이미지 삭제", description = "첨부된 이미지만 삭제")
-    public ApiResTemplate<Void> postImageDelete(@PathVariable("postId") Long postId) throws MalformedURLException {
+    public ApiResTemplate<Void> postImageDelete(@PathVariable("postId") Long postId) {
         postService.postImageDelete(postId);
         return ApiResTemplate.successWithNoContent(SuccessCode.POST_DELETE_SUCCESS);
     }

@@ -38,17 +38,11 @@ public class PostService {
         if (image != null && !image.isEmpty()) {
             try {
                 imageUrl = s3Uploader.upload(image);
+            } catch (IOException e) {
+                throw new BusinessException(ErrorCode.FILE_UPLOAD_FAIL_EXCEPTION, ErrorCode.FILE_UPLOAD_FAIL_EXCEPTION.getMessage());
             }
-        catch (IOException e) {
-                throw new BusinessException(ErrorCode.FILE_UPLOAD_FAIL_EXCEPTION,  ErrorCode.FILE_UPLOAD_FAIL_EXCEPTION.getMessage());
         }
-        }
-        Post post = Post.builder()
-                .title(postSaveRequestDto.title())
-                .contents(postSaveRequestDto.contents())
-                .member(member)
-                .imageUrl(imageUrl)
-                .build();
+        Post post = Post.builder().title(postSaveRequestDto.title()).contents(postSaveRequestDto.contents()).member(member).imageUrl(imageUrl).build();
 
         postRepository.save(post);
     }
@@ -76,27 +70,26 @@ public class PostService {
 
             String newImageUrl = s3Uploader.upload(image);
             post.updateImage(newImageUrl);
-    }
+        }
     }
 
     //이미지 단독 삭제 구현
     @Transactional
-    public void postImageDelete(Long postId) throws MalformedURLException {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND_EXCEPTION, ErrorCode.POST_NOT_FOUND_EXCEPTION.getMessage() + postId));
+    public void postImageDelete(Long postId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND_EXCEPTION, ErrorCode.POST_NOT_FOUND_EXCEPTION.getMessage() + postId));
 
         //db 삭제 전에 s3부터 삭제
         String targetImageUrl = post.getImageUrl();
         // 이미지가 존재하면 S3에서 지우고, DB에서도 연결을 끊기
         if (targetImageUrl != null && !targetImageUrl.isEmpty()) {
-            s3Uploader.deleteImage(post.getImageUrl());
+            s3Uploader.deleteImage(targetImageUrl);
             post.updateImage(null);
         }
     }
 
     // 게시물 삭제
     @Transactional
-    public void postDelete(Long postId) throws MalformedURLException {
+    public void postDelete(Long postId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND_EXCEPTION, ErrorCode.POST_NOT_FOUND_EXCEPTION.getMessage() + postId));
 
         if (post.getImageUrl() != null) {
